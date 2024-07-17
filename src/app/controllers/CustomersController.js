@@ -108,7 +108,14 @@ class CustomersController {
   }
 
   async show(req, res) {
-    const customer = await Customer.findByPk(req.params.id);
+    const customer = await Customer.findByPk(req.params.id, {
+      include: [
+        {
+          model: Contact,
+          attributes: ["id", "name", "status"],
+        },
+      ],
+    });
 
     if (!customer) {
       return res.status(404).json();

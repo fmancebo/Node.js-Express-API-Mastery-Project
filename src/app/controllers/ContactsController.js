@@ -115,6 +115,13 @@ class ContactsController {
         id: req.params.id,
       },
       attributes: { exclude: ["customer_id", "customerId"] },
+      include: [
+        {
+          model: Customer,
+          attributes: ["id", "name", "status"],
+          required: true,
+        },
+      ],
     });
 
     if (!contact) {

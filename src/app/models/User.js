@@ -26,6 +26,10 @@ class User extends Model {
     });
   }
 
+  static associate(models) {
+    this.hasMany(models.File);
+  }
+
   checkPassword(password) {
     return bcrypt.compare(password, this.password_hash);
   }

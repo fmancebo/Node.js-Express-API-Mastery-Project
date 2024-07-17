@@ -1,6 +1,7 @@
+/** @type {import('sequelize-cli').Migration} */
 module.exports = {
-  up: (queryInterface, Sequelize) => {
-    return queryInterface.createTable("contacts", {
+  async up(queryInterface, Sequelize) {
+    return queryInterface.createTable("files", {
       id: {
         type: Sequelize.INTEGER,
         allowNull: false,
@@ -11,10 +12,9 @@ module.exports = {
         type: Sequelize.STRING,
         allowNull: false,
       },
-      email: {
+      path: {
         type: Sequelize.STRING,
         allowNull: false,
-        unique: true,
       },
       created_at: {
         type: Sequelize.DATE,
@@ -24,9 +24,9 @@ module.exports = {
         type: Sequelize.DATE,
         allowNull: false,
       },
-      customer_id: {
+      user_id: {
         type: Sequelize.INTEGER,
-        references: { model: "customers", key: "id" },
+        references: { model: "users", key: "id" },
         onUpdate: "CASCADE",
         onDelete: "CASCADE",
         allowNull: false,
@@ -34,7 +34,7 @@ module.exports = {
     });
   },
 
-  down: queryInterface => {
-    return queryInterface.dropTable("contacts");
+  async down(queryInterface) {
+    return queryInterface.dropTable("files");
   },
 };

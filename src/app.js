@@ -1,8 +1,10 @@
-// import "dotenv/config";
+import "dotenv/config";
 import express from "express";
 import Youch from "youch";
 import "express-async-errors";
-// import authMiddleware from "./app/middlewares/auth";
+import * as Sentry from "@sentry/node";
+import sentryConfig from "./config/sentry";
+
 import routes from "./routes";
 
 import "./database";
@@ -10,6 +12,7 @@ import "./database";
 class App {
   constructor() {
     this.server = express();
+    Sentry.init(sentryConfig); // sentry
     this.middlewares();
     this.routes();
     this.exceptionHandler();
@@ -18,7 +21,6 @@ class App {
   middlewares() {
     this.server.use(express.json());
     this.server.use(express.urlencoded({ extended: false }));
-    // this.server.use(authMiddleware);
   }
 
   routes() {
@@ -32,7 +34,7 @@ class App {
         return res.status(500).json(errors);
       }
 
-      return res.status(500).json({ error: "Internal server error." });
+      return res.status(500).json({ error: "Internal server error" });
     });
   }
 }

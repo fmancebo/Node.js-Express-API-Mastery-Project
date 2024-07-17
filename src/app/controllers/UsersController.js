@@ -2,7 +2,12 @@ import * as Yup from "yup";
 import { Op } from "sequelize";
 import { parseISO } from "date-fns";
 
+import Queue from "../../lib/Queue";
+// import DummyJob from "../jobs/DummyJob";
+import WelcomeEmailJob from "../jobs/WelcomeEmailJob";
+
 import User from "../models/User";
+import File from "../models/File";
 
 class UsersController {
   async index(req, res) {
@@ -83,6 +88,12 @@ class UsersController {
     const data = await User.findAll({
       attributes: { exclude: ["password", "password_hash"] },
       where,
+      include: [
+        {
+          model: File,
+          attributes: ["id", "name"],
+        },
+      ],
       order,
       limit,
       offset: limit * page - limit,
@@ -94,15 +105,20 @@ class UsersController {
   }
 
   async show(req, res) {
-    const user = await User.findByPk(req.params.id);
+    const user = await User.findByPk(req.params.id, {
+      attributes: { exclude: ["password", "password_hash"] },
+      include: [
+        {
+          model: File,
+          attributes: ["id", "name"],
+        },
+      ],
+    });
 
     if (!user) {
       return res.status(404).json();
     }
-
-    const { id, name, email, createdAt, updatedAt } = user;
-
-    return res.json({ id, name, email, createdAt, updatedAt });
+    return res.json({ user });
   }
 
   async create(req, res) {
@@ -123,17 +139,28 @@ class UsersController {
       return res.status(400).json({ error: "Error on validate schema." });
     }
 
-    const { id, name, email, createdAt, updatedAt } = await User.create(
-      req.body
-    );
+    const {
+      id,
+      name,
+      email,
+      file_id,
+      createdAt,
+      updatedAt,
+    } = await User.create(req.body);
 
-    return res.status(201).json({ id, name, email, createdAt, updatedAt });
+    // await Queue.add(DummyJob.key, { message: "Hello Jobs" });
+    await Queue.add(WelcomeEmailJob.key, { email, name });
+
+    return res
+      .status(201)
+      .json({ id, name, email, file_id, createdAt, updatedAt });
   }
 
   async update(req, res) {
     const schema = Yup.object().shape({
       name: Yup.string(),
       email: Yup.string().email(),
+      file_id: Yup.string(),
       oldPassword: Yup.string().min(8),
       password: Yup.string()
         .min(8)
@@ -161,11 +188,18 @@ class UsersController {
       return res.status(401).json({ error: "User password not match." });
     }
 
-    const { id, name, email, createdAt, updatedAt } = await user.update(
-      req.body
-    );
+    const {
+      id,
+      name,
+      email,
+      file_id,
+      createdAt,
+      updatedAt,
+    } = await user.update(req.body);
 
-    return res.status(201).json({ id, name, email, createdAt, updatedAt });
+    return res
+      .status(201)
+      .json({ id, name, email, file_id, createdAt, updatedAt });
   }
 
   async destroy(req, res) {
